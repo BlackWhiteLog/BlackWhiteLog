@@ -1,27 +1,60 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, session
 import routes.owner.owner_menu_db as owner_db
 import math
 
 
+# def register_owner_routes(app):
+# # -------------------------------------------------------------------------------------
+# # 오너 보드 페이지
+# # -------------------------------------------------------------------------------------
+#     @app.route("/owner/board", endpoint="owner_board")
+
+
+#     def owner_board():
+#         owner_id = 1
+#         total_menu_count = owner_db.get_menu_count_by_owner(owner_id)
+
+#         return render_template(
+#             "owner/owner_board.html",
+#             total_menu_count=total_menu_count
+#         )
+    
+
+# 이종민 수정 (위에 주석으로 처리한 함수를 다음처럼 고침) S    
 def register_owner_routes(app):
+    def require_owner_approved():
+        owner_id = session.get("user_id")
+
+        if not owner_id:
+            flash("로그인이 필요합니다.")
+            return None, redirect(url_for("login.login"))
+
+        if owner_db.has_approved_restaurant(owner_id):
+            return owner_id, None
+
+        if owner_db.has_pending_restaurant(owner_id):
+            flash("현재 판매자 승인 대기 중입니다.")
+        else:
+            flash("판매자 승인 후 이용할 수 있습니다.")
+
+        return None, redirect(url_for("seller_register"))
+
 # -------------------------------------------------------------------------------------
 # 오너 보드 페이지
 # -------------------------------------------------------------------------------------
     @app.route("/owner/board", endpoint="owner_board")
-
-
     def owner_board():
-        owner_id = 1
+        owner_id, redirect_response = require_owner_approved()
+        if redirect_response:
+            return redirect_response
+
         total_menu_count = owner_db.get_menu_count_by_owner(owner_id)
 
         return render_template(
             "owner/owner_board.html",
             total_menu_count=total_menu_count
         )
-    
-
-
-
+# 이종민 수정 (위에 주석으로 처리한 함수를 다음처럼 고침) E
 
 
 

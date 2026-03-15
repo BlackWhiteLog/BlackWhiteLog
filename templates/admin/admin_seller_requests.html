@@ -1,0 +1,71 @@
+<!-- 이종민 추가한 새로운 파일 "판매자 신청 관리" -->
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>판매자 신청 관리</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-shell" style="max-width: 1100px; margin: 40px auto; padding: 20px;">
+        <h1>판매자 신청 관리</h1>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div style="margin-bottom: 16px;">
+                    {% for message in messages %}
+                        <div style="padding: 10px 12px; border-radius: 8px; background: #f4f4f4; margin-bottom: 8px;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if items %}
+            <table border="1" cellpadding="10" cellspacing="0" style="width:100%; background:#fff;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>상호명</th>
+                        <th>주소</th>
+                        <th>연락처</th>
+                        <th>소개</th>
+                        <th>owner_id</th>
+                        <th>상태</th>
+                        <th>처리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.restaurant_id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.road_address }}</td>
+                        <td>{{ item.phone }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.owner_id }}</td>
+                        <td>{{ item.status }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('approve_seller_request', restaurant_id=item.restaurant_id) }}" style="display:inline;">
+                                <button type="submit">승인</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('reject_seller_request', restaurant_id=item.restaurant_id) }}" style="display:inline;">
+                                <button type="submit">거절</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>대기 중인 판매자 신청이 없습니다.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+
+

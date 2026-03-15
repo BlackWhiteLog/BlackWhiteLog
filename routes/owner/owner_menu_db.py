@@ -501,6 +501,164 @@ def update_menu(owner_id, menu_id, menu_category_id, menu_name, price, status, i
         raise
     finally:
         conn.close()
+
+
+
+
+# 이종민 3월 15일 추가된 함수 4개 (판매자 등록 흐름을 위한 DB 도우미 함수)  S
+def get_category_id_by_name(category_name):
+    sql = """
+        SELECT restaurant_category_id
+        FROM restaurant_categories
+        WHERE restaurant_category_name = %s
+        LIMIT 1
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, (category_name,))
+            row = cursor.fetchone()
+            return row["restaurant_category_id"] if row else None
+    finally:
+        conn.close()
+
+def has_pending_restaurant(owner_id):
+    sql = """
+        SELECT restaurant_id
+        FROM restaurants
+        WHERE owner_id = %s
+          AND status = 'PENDING'
+        LIMIT 1
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, (owner_id,))
+            return cursor.fetchone() is not None
+    finally:
+        conn.close()
+
+def has_approved_restaurant(owner_id):
+    sql = """
+        SELECT restaurant_id
+        FROM restaurants
+        WHERE owner_id = %s
+          AND status IN ('OPEN', 'ACTIVE')
+        LIMIT 1
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, (owner_id,))
+            return cursor.fetchone() is not None
+    finally:
+        conn.close()
+
+def insert_pending_restaurant(owner_id, store_name, phone, road_address, category_name, description):
+    category_id = get_category_id_by_name(category_name)
+
+    if category_id is None:
+        category_id = 1
+
+    sql = """
+        INSERT INTO restaurants (
+            restaurant_category_id,
+            name,
+            address,
+            road_address,
+            latitude,
+            longitude,
+            phone,
+            business_hours,
+            description,
+            region_sido,
+            region_sigungu,
+            region_dong,
+            owner_id,
+            status
+        )
+        VALUES (%s, %s, %s, %s, NULL, NULL, %s, NULL, %s, NULL, NULL, NULL, %s, 'PENDING')
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, (
+                category_id,
+                store_name,
+                road_address,
+                road_address,
+                phone,
+                description,
+                owner_id
+            ))
+    finally:
+        conn.close()
+
+
+def fetch_pending_restaurants():
+    sql = """
+        SELECT
+            restaurant_id,
+            name,
+            road_address,
+            phone,
+            description,
+            owner_id,
+            created_at,
+            status
+        FROM restaurants
+        WHERE status = 'PENDING'
+        ORDER BY created_at ASC
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql)
+            return cursor.fetchall()
+    finally:
+        conn.close()
+
+
+def approve_restaurant(restaurant_id):
+    sql = """
+        UPDATE restaurants
+        SET status = 'OPEN'
+        WHERE restaurant_id = %s
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, (restaurant_id,))
+    finally:
+        conn.close()
+
+def reject_restaurant(restaurant_id):
+    sql = """
+        UPDATE restaurants
+        SET status = 'REJECTED'
+        WHERE restaurant_id = %s
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, (restaurant_id,))
+    finally:
+        conn.close()
+
+# 이종민 3월 15일 추가된 함수 4개 (판매자 등록 흐름을 위한 DB 도우미 함수)  E
+
+
+
+
+
+
 #------------------------------------------------------------------------------------
 # 메뉴 삭제 (DELETE) - menu_management
 #------------------------------------------------------------------------------------
